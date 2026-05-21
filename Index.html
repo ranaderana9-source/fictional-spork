@@ -2,730 +2,187 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>360° Photo Viewer &amp; Share</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>360 Photo Viewer &amp; Social Upload</title>
 
-    <!-- Three.js for 360 rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
-    </script>
-
+    <!-- Pannellum CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0d1117;
-            color: #f0f6fc;
-            overflow-x: hidden;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
         }
 
-        /* ─── Header ─── */
+        /* ── Header ── */
         header {
-            background: #161b22;
-            padding: 18px 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #30363d;
-            flex-wrap: wrap;
-            gap: 12px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 24px;
+            text-align: center;
+            border-bottom: 1px solid #2a2a4a;
         }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo span {
-            background: linear-gradient(135deg, #58a6ff, #3fb950);
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing:  capitalized;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        /* ─── Buttons ─── */
-        .btn {
-            background: #21262d;
-            color: #f0f6fc;
-            border: 1px solid #30363d;
-            padding: 8px 18px;
-            border-radius: 6px;
-            cursor: pointer;
+        header p {
             font-size: 0.9rem;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            color: #8899bb;
+            margin-top: 4px;
         }
 
-        .btn:hover {
-            background: #30363d;
-            border-color: #58a6ff;
+        /* ── Layout ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px;
         }
 
-        .btn-primary {
-            background: #238636;
-            border-color: #2ea043;
+        /* ── 360 Viewer ── */
+        .viewer-section {
+            margin-bottom: 30px;
         }
-
-        .btn-primary:hover {
-            background: #2ea043;
+        .viewer-section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #aab8d8;
         }
-
-        /* ─── 360 Viewer ─── */
-        #viewer-container {
-            position: relative;
+        #panorama-container {
             width: 100%;
-            height: calc(100vh - 180px);
-            min-height: 400px;
-            background: #000;
-            cursor: grab;
+            height: 480px;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            background: #1a1a2e;
+        }
+        @media (max-width: 600px) {
+            #panorama-container { height: 320px; }
         }
 
-        #viewer-container:active {
-            cursor: grabbing;
+        /* ── Upload controls ── */
+        .upload-area {
+            background: #1a1a2e;
+            border: 2px dashed #3a3a5a;
+            border-radius: 14px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: border-color 0.3s, background 0.3s;
+            cursor: pointer;
+        }
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #00d2ff;
+            background: #1e1e36;
+        }
+        .upload-area .icon {
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+        }
+        .upload-area p {
+            font-size: 0.95rem;
+            color: #99aac5;
+        }
+        .upload-area .sub {
+            font-size: 0.8rem;
+            color: #6a7a95;
+            margin-top: 6px;
+        }
+        #file-input {
+            display: none;
         }
 
-        #viewer-container canvas {
+        /* ── Photo grid ── */
+        .gallery-section {
+            margin-top: 30px;
+        }
+        .gallery-section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 14px;
+            color: #aab8d8;
+        }
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .photo-card {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #1a1a2e;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            aspect-ratio: 1 / 1;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .photo-card:hover { transform: scale(1.03); }
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            width: 100% !important;
-            height: 100% !important;
         }
-
-        .viewer-hint {
+        .photo-card .badge {
             position: absolute;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.65);
-            padding: 8px 18px;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 2px 8px;
             border-radius: 20px;
-            font-size: 0.85rem;
-            color: #8b949e;
-            pointer-events: none;
-            white-space: nowrap;
             backdrop-filter: blur(4px);
         }
 
-        /* ─── Drop zone overlay ─── */
-        #drop-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(13, 17, 23, 0.88);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 18px;
-            z-index: 10;
-            border: 3px dashed #58a6ff;
-            border-radius: 8px;
-            backdrop-filter: blur(6px);
-        }
-
-        #drop-overlay.active {
+        /* ── Social bar ── */
+        .social-bar {
             display: flex;
-        }
-
-        #drop-overlay .icon {
-            font-size: 3rem;
-        }
-        #drop-overlay p {
-            font-size: 1.2rem;
-            color: #c9d1d9;
-        }
-
-        /* ─── Thumbnail strip ─── */
-        #gallery {
-            display: flex;
-            gap: 10px;
-            padding: 14px 24px;
-            background: #161b22;
-            overflow-x: auto;
-            border-top: 1px solid #30363d;
-            min-height: 100px;
-            align-items: center;
-        }
-
-        #gallery::-webkit-scrollbar {
-            height: 6px;
-        }
-        #gallery::-webkit-scrollbar-thumb {
-            background: #30363d;
-            border-radius: 3px;
-        }
-
-        .gallery-label {
-            font-size: 0.85rem;
-            color: #8b949e;
-            white-space: nowrap;
-            padding-right: 10px;
-        }
-
-        .thumb {
-            width: 72px;
-            height: 72px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            background: #21262d;
-        }
-
-        .thumb:hover,
-        .thumb.active {
-            border-color: #58a6ff;
-            transform: scale(1.05);
-        }
-
-        .thumb.active {
-            box-shadow: 0 0 12px rgba(88, 166, 255, 0.4);
-        }
-
-        /* ─── Share panel ─── */
-        #share-panel {
-            background: #161b22;
-            border-top: 1px solid #30363d;
-            padding: 18px 24px;
-            display: none;
             flex-wrap: wrap;
-            align-items: center;
-            gap: 14px;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: center;
         }
-
-        #share-panel.open {
-            display: flex;
-        }
-
-        #share-panel .share-label {
-            font-size: 0.9rem;
-            color: #8b949e;
-        }
-
         .social-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: opacity 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: #fff;
         }
-
         .social-btn:hover {
-            opacity: 0.85;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
+        .social-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .btn-facebook  { background: #1877f2; }
+        .btn-twitter   { background: #1da1f2; }
+        .btn-linkedin  { background: #0a66c2; }
+        .btn-tiktok    { background: #111; border: 1px solid #333; }
 
-        .social-btn.tw {
-            background: #1da1f2;
-        }
-        .social-btn.fb {
-            background: #1877f2;
-        }
-        .social-btn.rd {
-            background: #ff4500;
-        }
-        .social-btn.li {
-            background: #0a66c2;
-        }
-        .social-btn.cp {
-            background: #30363d;
-            border: 1px solid #58a6ff;
-        }
-
+        /* ── Status toast ── */
         .toast {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #238636;
-            color: #fff;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            transform: translateY(80px);
-            opacity: 0;
-            transition: all 0.35s ease;
-            z-index: 999;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .file-input-hidden {
-            display: none;
-        }
-
-        @media (max-width: 600px) {
-            header {
-                padding: 12px 16px;
-            }
-            .logo {
-                font-size: 1.15rem;
-            }
-            #viewer-container {
-                height: calc(100vh - 240px);
-                min-height: 280px;
-            }
-            #gallery {
-                padding: 10px 14px;
-                min-height: 72px;
-            }
-            .thumb {
-                width: 54px;
-                height: 54px;
-            }
-            #share-panel {
-                padding: 12px 14px;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <!-- ─── HEADER ─── -->
-    <header>
-        <div class="logo">
-            <span>360&#176; Photo Viewer</span>
-        </div>
-        <div class="header-actions">
-            <button class="btn" id="uploadBtn" title="Upload a photo (equirectangular works best)">
-                &#128247; Upload Photo
-            </button>
-            <button class="btn btn-primary" id="shareToggleBtn" title="Share current photo">
-                &#128228; Share
-            </button>
-            <input type="file" id="fileInput" class="file-input-hidden" accept="image/*" multiple />
-        </div>
-    </header>
-
-    <!-- ─── 360 VIEWER ─── -->
-    <div id="viewer-container">
-        <div id="drop-overlay">
-            <div class="icon">&#128248;</div>
-            <p>Drop your equirectangular photo here</p>
-        </div>
-        <div class="viewer-hint">&#8963; Drag to look around &bull; Scroll to zoom</div>
-    </div>
-
-    <!-- ─── GALLERY ─── -->
-    <div id="gallery">
-        <span class="gallery-label">&#128196; Gallery</span>
-        <!-- thumbnails injected by JS -->
-    </div>
-
-    <!-- ─── SHARE PANEL ─── -->
-    <div id="share-panel">
-        <span class="share-label">&#128279; Share this view:</span>
-        <button class="social-btn tw" data-social="twitter">&#120143; Twitter / X</button>
-        <button class="social-btn fb" data-social="facebook">&#120143; Facebook</button>
-        <button class="social-btn rd" data-social="reddit">&#120143; Reddit</button>
-        <button class="social-btn li" data-social="linkedin">&#120143; LinkedIn</button>
-        <button class="social-btn cp" data-social="copy">&#128203; Copy Link</button>
-    </div>
-
-    <!-- ─── TOAST ─── -->
-    <div id="toast" class="toast"></div>
-
-    <script>
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  1.  THREE.JS 360 VIEWER
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        const container = document.getElementById('viewer-container');
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(0, 0, 0.1);
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.prepend(renderer.domElement);
-
-        // Sphere geometry for equirectangular mapping
-        const geometry = new THREE.SphereGeometry(500, 64, 64);
-        // Flip normals so the camera sees the inside
-        geometry.scale(-1, 1, 1);
-
-        const defaultTexture = (() => {
-            const canvas = document.createElement('canvas');
-            canvas.width = 2048;
-            canvas.height = 1024;
-            const ctx = canvas.getContext('2d');
-
-            // Gradient sky
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#0d1117');
-            grad.addColorStop(0.4, '#161b22');
-            grad.addColorStop(0.6, '#21262d');
-            grad.addColorStop(1, '#0d1117');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Grid lines
-            ctx.strokeStyle = '#30363d';
-            ctx.lineWidth = 1;
-            for (let x = 0; x <= canvas.width; x += 64) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height);
-                ctx.stroke();
-            }
-            for (let y = 0; y <= canvas.height; y += 64) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width, y);
-                ctx.stroke();
-            }
-
-            // Center text
-            ctx.fillStyle = '#8b949e';
-            ctx.font = 'bold 40px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('Drop or upload an equirectangular photo', canvas.width / 2, canvas.height / 2 - 20);
-            ctx.font = '24px sans-serif';
-            ctx.fillText('(360 panorama)', canvas.width / 2, canvas.height / 2 + 40);
-
-            return new THREE.CanvasTexture(canvas);
-        })();
-
-        const material = new THREE.MeshBasicMaterial({
-            map: defaultTexture
-        });
-
-        const sphere = new THREE.Mesh(geometry, material);
-        scene.add(sphere);
-
-        // ─── Controls ───
-
-        let isDragging = false;
-        let prevX = 0,
-            prevY = 0;
-        let lat = 0,
-            lon = 0;
-        let zoom = 75;
-
-        function updateCamera() {
-            const phi = THREE.MathUtils.degToRad(90 - lat);
-            const theta = THREE.MathUtils.degToRad(lon);
-
-            const x = 500 * Math.sin(phi) * Math.cos(theta);
-            const y = 500 * Math.cos(phi);
-            const z = 500 * Math.sin(phi) * Math.sin(theta);
-
-            camera.lookAt(x, y, z);
-            camera.fov = zoom;
-            camera.updateProjectionMatrix();
-        }
-
-        container.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            prevX = e.clientX;
-            prevY = e.clientY;
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - prevX;
-            const dy = e.clientY - prevY;
-            lon += dx * 0.3;
-            lat -= dy * 0.3;
-            lat = Math.max(-90, Math.min(90, lat));
-            prevX = e.clientX;
-            prevY = e.clientY;
-            updateCamera();
-        });
-
-        window.addEventListener('mouseup', () => { isDragging = false; });
-
-        // Touch support
-        let touchStartX, touchStartY;
-        let touchLat, touchLon;
-
-        container.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                touchLat = lat;
-                touchLon = lon;
-            }
-        }, { passive: true });
-
-        container.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 1) {
-                const dx = e.touches[0].clientX - touchStartX;
-                const dy = e.touches[0].clientY - touchStartY;
-                lon = touchLon + dx * 0.3;
-                lat = touchLat - dy * 0.3;
-                lat = Math.max(-90, Math.min(90, lat));
-                updateCamera();
-            }
-        }, { passive: true });
-
-        // Scroll zoom
-        container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            zoom += e.deltaY * 0.05;
-            zoom = Math.max(20, Math.min(120, zoom));
-            updateCamera();
-        }, { passive: false });
-
-        updateCamera();
-
-        // ─── Resize ───
-
-        window.addEventListener('resize', () => {
-            const w = container.clientWidth;
-            const h = container.clientHeight;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
-        });
-
-        // ─── Render loop ───
-
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
-        animate();
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  2.  TEXTURE LOADING
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        const textureLoader = new THREE.TextureLoader();
-
-        function loadPhoto(file) {
-            const url = URL.createObjectURL(filephins);
-            textureLoader.load(url, (tex) => {
-                material.map = tex;
-                material.needsUpdate = true;
-                URL.revokeObjectURL(url);
-                addThumbnail(file);
-                showToast('Photo loaded!');
-            }, undefined, () => {
-                URL.revokeObjectURL(url);
-                showToast('Failed to load image. Try a different file.', true);
-            });
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  3.  GALLERY / THUMBNAILS
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        const gallery = document.getElementById('gallery');
-
-        function addThumbnail(file) {
-            const url = URL.createObjectURL(file);
-            const img = document.createElement('img');
-            img.className = 'thumb active';
-            img.src = url;
-            img.title = file.name;
-
-            // Click to load
-            img.addEventListener('click', () => {
-                document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-                img.classList.add('active');
-                textureLoader.load(url, (tex) => {
-                    material.map = tex;
-                    material.needsUpdate = true;
-                });
-            });
-
-            // Insert before the gallery label's next sibling or just append
-            const label = gallery.querySelector('.gallery-label');
-            if (label && label.nextSibling) {
-                gallery.insertBefore(img, label.nextSibling);
-            } else {
-                gallery.appendChild(img);
-            }
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  4.  UPLOAD (button + drag & drop)
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        const fileInput = document.getElementById('fileInput');
-        const uploadBtn = document.getElementById('uploadBtn');
-
-        uploadBtn.addEventListener('click', () => fileInput.click());
-
-        fileInput.addEventListener('change', () => {
-            const files = fileInput.files;
-            if (files.length > 0) {
-                // Load the first file into viewer, add all to gallery
-                loadPhoto(files[0]);
-                for (let i = 1; i < files.length; i++) {
-                    addThumbnail(files[i]);
-                }
-            }
-            fileInput.value = '';
-        });
-
-        // Drag & Drop
-        const dropOverlay = document.getElementById('drop-overlay');
-
-        container.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.add('active');
-        });
-
-        container.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        container.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            if (!container.contains(e.relatedTarget)) {
-                dropOverlay.classList.remove('active');
-            }
-        });
-
-        container.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropOverlay.classList.remove('active');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                loadPhoto(files[0]);
-                for (let i = 1; i < files.length; i++) {
-                    addThumbnail(files[i]);
-                }
-            }
-        });
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  5.  SHARE / SOCIALS
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        const sharePanel = document.getElementById('share-panel');
-        const shareToggleBtn = document.getElementById('shareToggleBtn');
-
-        shareToggleBtn.addEventListener('click', () => {
-            sharePanel.classList.toggle('open');
-        });
-
-        // Build a shareable URL (in reality you'd host your page; for demo we use the current page)
-        // We encode the current lon/lat/zoom so the viewer can restore the view.
-        function buildShareUrl() {
-            const base = window.location.href.split('?')[0];
-            const params = new URLSearchParams();
-            params.set('lon', lon.toFixed(2));
-            params.set('lat', lat.toFixed(2));
-            params.set('zoom', zoom.toFixed(1));
-            return base + '?' + params.toString();
-        }
-
-        // Restore view from URL params on load
-        (function restoreViewFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.has('lon')) lon = parseFloat(params.get('lon'));
-            if (params.has('lat')) lat = parseFloat(params.get('lat'));
-            if (params.has('zoom')) zoom = parseFloat(params.get('zoom'));
-            updateCamera();
-        })();
-
-        document.querySelectorAll('.social-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const social = btn.dataset.social;
-                const url = encodeURIComponent(buildShareUrl());
-                const text = encodeURIComponent('Check out this 360\u00b0 photo!');
-                let shareUrl = '';
-
-                switch (social) {
-                    case 'twitter':
-                        shareUrl =
-                            `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
-                        break;
-                    case 'facebook':
-                        shareUrl =
-                            `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`;
-                        break;
-                    case 'reddit':
-                        shareUrl =
-                            `https://www.reddit.com/submit?url=${url}&title=${text}`;
-                        break;
-                    case 'linkedin':
-                        shareUrl =
-                            `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
-                        break;
-                    case 'copy':
-                        navigator.clipboard.writeText(buildShareUrl()).then(() => {
-                            showToast('Link copied to clipboard!');
-                        }).catch(() => {
-                            // Fallback
-                            const ta = document.createElement('textarea');
-                            ta.value = buildShareUrl();
-                            document.body.appendChild(ta);
-                            ta.select();
-                            document.execCommand('copy');
-                            document.body.removeChild(ta);
-                            showToast('Link copied to clipboard!');
-                        });
-                        return;
-                }
-
-                if (shareUrl) {
-                    window.open(shareUrl, '_blank', 'width=600,height=500');
-                }
-            });
-        });
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  6.  TOAST
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        const toastEl = document.getElementById('toast');
-        let toastTimer = null;
-
-        function showToast(msg, isError = false) {
-            toastEl.textContent = msg;
-            toastEl.style.background = isError ? '#da3633' : '#238636';
-            toastEl.classList.add('show');
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toastEl.classList.remove('show');
-            }, 3500);
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  7.  KEYBOARD SHORTCUT
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'u' || e.key === 'U') {
-                fileInput.click();
-            }
-            if (e.key === 's' || e.key === 'S') {
-                sharePanel.classList.toggle('open');
-            }
-        });
-
-        console.log('360 Photo Viewer ready!');
-        console.log('Shortcuts: [U] Upload  [S] Share');
-    </script>
-
-</body>
-</html>
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #23234a;
+            color: #e0e0f0;
+            padding: 12px 28px
